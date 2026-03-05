@@ -38,15 +38,18 @@ Claude helped design the tests by generating one test per bug (e.g. `test_hard_r
 
 ## 4. What did you learn about Streamlit and state?
 
-- In your own words, explain why the secret number kept changing in the original app.
-- How would you explain Streamlit "reruns" and session state to a friend who has never used Streamlit?
-- What change did you make that finally gave the game a stable secret number?
+Every time a user interacts with a Streamlit widget — clicking a button, changing a dropdown — the entire Python script re-runs from top to bottom. In the original app, `st.session_state.secret = random.randint(low, high)` was called unconditionally at the module level, so a brand-new random number was generated on every rerun, meaning the secret changed every time you clicked "Submit Guess."
+
+Streamlit "reruns" are like refreshing a webpage: the whole script executes again. `st.session_state` is a dictionary that survives across those reruns — anything you store in it stays put. I'd explain it to a friend like this: imagine every button click throws away the page and redraws it, but `session_state` is a sticky note on the fridge that doesn't get erased between redraws.
+
+The fix was wrapping the secret generation in `if "secret" not in st.session_state:` so the random number is only picked once (the very first run) and then preserved in `session_state` for every rerun after that.
 
 ---
 
 ## 5. Looking ahead: your developer habits
 
-- What is one habit or strategy from this project that you want to reuse in future labs or projects?
-  - This could be a testing habit, a prompting strategy, or a way you used Git.
-- What is one thing you would do differently next time you work with AI on a coding task?
-- In one or two sentences, describe how this project changed the way you think about AI generated code.
+**Habit to reuse:** Running pytest after every change, not just at the end. On this project I added a test for each bug immediately after fixing it, which caught the tuple-unpacking issue with `check_guess` right away instead of discovering it much later. That tight fix → test → confirm loop saved a lot of guesswork.
+
+**What I'd do differently:** Before asking the AI to write tests, I'd first ask it to explain the return type of each function I'm testing. The misleading test assertions (`assert result == "Win"` on a tuple) happened because neither I nor the AI paused to confirm what `check_guess` actually returned. A quick "what does this function return?" question upfront would have avoided that round-trip.
+
+**How this project changed my thinking:** AI-generated code looks correct at a glance but can contain subtle logic errors that only surface when you run it or test it — the Hard range bug is a perfect example of code that runs without crashing but produces completely wrong behavior. I now treat AI output as a first draft that always needs to be read, run, and tested before trusting it.
