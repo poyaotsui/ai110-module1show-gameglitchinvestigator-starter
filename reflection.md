@@ -4,12 +4,19 @@ Answer each question in 3 to 5 sentences. Be specific and honest about what actu
 
 ## 1. What was broken when you started?
 
-- What did the game look like the first time you ran it?
-- List at least two concrete bugs you noticed at the start  
-  (for example: "the secret number kept changing" or "the hints were backwards").
-1.Hard difficulty has a larger range than Normal 
-2.The info banner always says "1 to 100" regardless of difficulty
-3. Attempts counter starts at 1, so the first guess is already "attempt 2"
+When I first ran the app, it launched without crashing but immediately felt wrong. The sidebar showed "Range: 1 to 50" when Hard was selected, which was actually a smaller range than Normal — the opposite of what Hard difficulty should mean. The info banner at the top of the page always read "Guess a number between 1 and 100" no matter which difficulty was chosen, so the displayed range was often incorrect and misleading.
+
+**Bug 1 — Hard difficulty had a smaller range than Normal:**
+Expected: Hard should be harder, meaning a wider range of numbers to guess from (e.g., 1–200).
+Actual: `get_range_for_difficulty("Hard")` returned `(1, 50)`, which is narrower than Normal's `(1, 100)`, making Hard easier, not harder.
+
+**Bug 2 — Info banner always showed "1 to 100" regardless of difficulty:**
+Expected: The banner should reflect the actual range for the selected difficulty (e.g., "1 to 20" for Easy, "1 to 200" for Hard).
+Actual: The `st.info()` f-string had the literals `"1 and 100"` hardcoded in, so it never updated when the difficulty changed.
+
+**Bug 3 — Attempts counter started at 1 instead of 0:**
+Expected: The first time I submitted a guess it should say "Attempt 1."
+Actual: `st.session_state.attempts` was initialized to `1` and then incremented to `2` on the first submit, so the very first guess was already labeled "Attempt 2 of 8."
 ---
 
 ## 2. How did you use AI as a teammate?
