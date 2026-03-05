@@ -6,8 +6,12 @@ def get_range_for_difficulty(difficulty: str):
         return 1, 20
     if difficulty == "Normal":
         return 1, 100
+    # FIX 1: Hard difficulty now has a larger range (1-200) than Normal (1-100),
+    # previously it incorrectly returned (1, 50) which was smaller than Normal's (1, 100).
+    # COLLABORATION: I identified this bug by reading the reflection.md notes, then asked
+    # Claude (Agent mode) to fix the return value so Hard > Normal in difficulty.
     if difficulty == "Hard":
-        return 1, 50
+        return 1, 200
     return 1, 100
 
 
@@ -35,9 +39,9 @@ def check_guess(guess, secret):
 
     try:
         if guess > secret:
-            return "Too High", "📈 Go HIGHER!"
+            return "Too High", "📉 Go LOWER!"
         else:
-            return "Too Low", "📉 Go LOWER!"
+            return "Too Low", "📈 Go HIGHER!"
     except TypeError:
         g = str(guess)
         if g == secret:
@@ -92,8 +96,12 @@ st.sidebar.caption(f"Attempts allowed: {attempt_limit}")
 if "secret" not in st.session_state:
     st.session_state.secret = random.randint(low, high)
 
+# FIX 3: Attempts counter now starts at 0 so the first guess is correctly "attempt 1",
+# previously initialized to 1 which made the first guess show as "attempt 2".
+# COLLABORATION: I noticed the off-by-one behavior while playing the game, then asked Claude
+# (Agent mode) to trace the session_state initialization and change the starting value to 0.
 if "attempts" not in st.session_state:
-    st.session_state.attempts = 1
+    st.session_state.attempts = 0
 
 if "score" not in st.session_state:
     st.session_state.score = 0
@@ -106,8 +114,12 @@ if "history" not in st.session_state:
 
 st.subheader("Make a guess")
 
+# FIX 2: Info banner now uses dynamic {low} and {high} variables so it reflects
+# the actual range for the selected difficulty, previously hardcoded to "1 and 100".
+# COLLABORATION: I spotted the hardcoded string in the f-string and described the bug to Claude,
+# which replaced the literals with the already-computed low/high variables.
 st.info(
-    f"Guess a number between 1 and 100. "
+    f"Guess a number between {low} and {high}. "
     f"Attempts left: {attempt_limit - st.session_state.attempts}"
 )
 
@@ -133,7 +145,8 @@ with col3:
 
 if new_game:
     st.session_state.attempts = 0
-    st.session_state.secret = random.randint(1, 100)
+    # FIX 2 (related): New game now uses difficulty-based range instead of hardcoded (1, 100)
+    st.session_state.secret = random.randint(low, high)
     st.success("New game started.")
     st.rerun()
 
@@ -155,10 +168,7 @@ if submit:
     else:
         st.session_state.history.append(guess_int)
 
-        if st.session_state.attempts % 2 == 0:
-            secret = str(st.session_state.secret)
-        else:
-            secret = st.session_state.secret
+        secret = st.session_state.secret
 
         outcome, message = check_guess(guess_int, secret)
 
